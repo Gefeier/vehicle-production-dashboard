@@ -470,4 +470,285 @@
                                             style: { 
                                                 width: completionProgress >= stage.completion 
                                                     ? '100%' 
+<<<<<<< HEAD
                                                     
+=======
+                                                    : currentProgressStage === index 
+                                                    ? `${((completionProgress - (stages[index-1]?.completion || 0)) / (stage.completion - (stages[index-1]?.completion || 0)) * 100).toFixed(0)}%`
+                                                    : '0%'
+                                            }
+                                        })
+                                    ])
+                                ])
+                            ]),
+                            // 流程箭头
+                            index < stages.length - 1 ? React.createElement(ChevronRight, {
+                                key: `arrow-${index}`,
+                                className: "h-8 w-8 text-gray-400 mx-2"
+                            }) : null
+                        ]).filter(Boolean))
+                    ])
+                ]),
+
+                // 班组详细信息
+                React.createElement('div', {
+                    key: 'details',
+                    className: "grid grid-cols-1 lg:grid-cols-3 gap-6"
+                }, [
+                    // 班组信息
+                    React.createElement('div', {
+                        key: 'team-info',
+                        className: "bg-white p-6 rounded-lg shadow-lg"
+                    }, [
+                        React.createElement('h3', {
+                            key: 'team-title',
+                            className: "text-lg font-semibold text-gray-800 mb-4 flex items-center"
+                        }, [
+                            React.createElement(Users, { key: 'users-icon', className: "h-5 w-5 mr-2 text-blue-500" }),
+                            "班组信息"
+                        ]),
+                        React.createElement('div', {
+                            key: 'team-details',
+                            className: "space-y-3"
+                        }, [
+                            React.createElement('div', {
+                                key: 'team-name-row',
+                                className: "flex justify-between items-center"
+                            }, [
+                                React.createElement('span', { key: 'label1', className: "text-gray-600" }, "班组名称:"),
+                                React.createElement('span', { key: 'value1', className: "font-medium text-blue-600" }, stages[currentStage].teamName)
+                            ]),
+                            React.createElement('div', {
+                                key: 'process-name-row',
+                                className: "flex justify-between items-center"
+                            }, [
+                                React.createElement('span', { key: 'label2', className: "text-gray-600" }, "工序名称:"),
+                                React.createElement('span', { key: 'value2', className: "font-medium" }, stages[currentStage].name)
+                            ]),
+                            React.createElement('div', {
+                                key: 'completion-row',
+                                className: "flex justify-between items-center"
+                            }, [
+                                React.createElement('span', { key: 'label3', className: "text-gray-600" }, "完成度:"),
+                                React.createElement('span', { key: 'value3', className: "font-bold text-green-600" }, `${stages[currentStage].completion}%`)
+                            ]),
+                            React.createElement('div', {
+                                key: 'status-row',
+                                className: "flex justify-between items-center"
+                            }, [
+                                React.createElement('span', { key: 'label4', className: "text-gray-600" }, "状态:"),
+                                React.createElement('span', {
+                                    key: 'value4',
+                                    className: `px-2 py-1 rounded text-xs font-medium ${
+                                        completionProgress >= stages[currentStage].completion 
+                                            ? 'bg-green-100 text-green-800' 
+                                            : currentProgressStage === currentStage
+                                            ? 'bg-blue-100 text-blue-800'
+                                            : 'bg-gray-100 text-gray-800'
+                                    }`
+                                }, completionProgress >= stages[currentStage].completion 
+                                    ? '已完成' 
+                                    : currentProgressStage === currentStage
+                                    ? '进行中'
+                                    : '等待中')
+                            ])
+                        ])
+                    ]),
+
+                    // 工作任务
+                    React.createElement('div', {
+                        key: 'work-tasks',
+                        className: "bg-white p-6 rounded-lg shadow-lg"
+                    }, [
+                        React.createElement('h3', {
+                            key: 'tasks-title',
+                            className: "text-lg font-semibold text-gray-800 mb-4 flex items-center"
+                        }, [
+                            React.createElement(Wrench, { key: 'wrench-icon', className: "h-5 w-5 mr-2 text-orange-500" }),
+                            "工作任务"
+                        ]),
+                        React.createElement('div', {
+                            key: 'tasks-list',
+                            className: "space-y-3"
+                        }, stages[currentStage].workTasks.map((task, index) =>
+                            React.createElement('div', {
+                                key: `task-${index}`,
+                                className: "flex items-center space-x-3 p-2 bg-gray-50 rounded"
+                            }, [
+                                React.createElement(CheckCircle, {
+                                    key: 'task-check',
+                                    className: `h-4 w-4 ${
+                                        completionProgress >= stages[currentStage].completion 
+                                            ? 'text-green-500' 
+                                            : 'text-gray-400'
+                                    }`
+                                }),
+                                React.createElement('span', {
+                                    key: 'task-text',
+                                    className: "text-sm font-medium"
+                                }, task)
+                            ])
+                        ))
+                    ]),
+
+                    // 物料需求统计
+                    React.createElement('div', {
+                        key: 'material-stats',
+                        className: "bg-white p-6 rounded-lg shadow-lg"
+                    }, [
+                        React.createElement('h3', {
+                            key: 'stats-title',
+                            className: "text-lg font-semibold text-gray-800 mb-4 flex items-center"
+                        }, [
+                            React.createElement(Package, { key: 'package-icon', className: "h-5 w-5 mr-2 text-green-500" }),
+                            "物料需求统计"
+                        ]),
+                        React.createElement('div', {
+                            key: 'stats-list',
+                            className: "space-y-3"
+                        }, [
+                            React.createElement('div', {
+                                key: 'total-materials',
+                                className: "flex justify-between items-center"
+                            }, [
+                                React.createElement('span', { key: 'label', className: "text-gray-600" }, "物料种类:"),
+                                React.createElement('span', { key: 'value', className: "font-bold text-blue-600" }, stages[currentStage].materials.length)
+                            ]),
+                            React.createElement('div', {
+                                key: 'steel-materials',
+                                className: "flex justify-between items-center"
+                            }, [
+                                React.createElement('span', { key: 'label', className: "text-gray-600" }, "钢材类:"),
+                                React.createElement('span', { key: 'value', className: "font-medium" }, stages[currentStage].materials.filter(m => m.unit === '千克').length)
+                            ]),
+                            React.createElement('div', {
+                                key: 'parts-materials',
+                                className: "flex justify-between items-center"
+                            }, [
+                                React.createElement('span', { key: 'label', className: "text-gray-600" }, "配件类:"),
+                                React.createElement('span', { key: 'value', className: "font-medium" }, stages[currentStage].materials.filter(m => m.unit !== '千克').length)
+                            ]),
+                            React.createElement('div', {
+                                key: 'total-weight',
+                                className: "flex justify-between items-center"
+                            }, [
+                                React.createElement('span', { key: 'label', className: "text-gray-600" }, "总重量:"),
+                                React.createElement('span', { key: 'value', className: "font-bold text-green-600" }, 
+                                    `${stages[currentStage].materials
+                                        .filter(m => m.unit === '千克')
+                                        .reduce((sum, m) => sum + m.quantity, 0)
+                                        .toFixed(2)} 千克`
+                                )
+                            ])
+                        ])
+                    ])
+                ]),
+
+                // 详细物料清单
+                React.createElement('div', {
+                    key: 'material-list',
+                    className: "mt-6 bg-white p-6 rounded-lg shadow-lg"
+                }, [
+                    React.createElement('h3', {
+                        key: 'list-title',
+                        className: "text-lg font-semibold text-gray-800 mb-4 flex items-center"
+                    }, [
+                        React.createElement(Package, { key: 'package-icon2', className: "h-5 w-5 mr-2 text-green-500" }),
+                        `详细物料清单 - ${stages[currentStage].teamName}`
+                    ]),
+                    React.createElement('div', {
+                        key: 'table-container',
+                        className: "overflow-x-auto"
+                    }, [
+                        React.createElement('table', {
+                            key: 'material-table',
+                            className: "w-full text-sm"
+                        }, [
+                            React.createElement('thead', { key: 'table-head' }, [
+                                React.createElement('tr', {
+                                    key: 'header-row',
+                                    className: "border-b bg-gray-50"
+                                }, [
+                                    React.createElement('th', { key: 'th1', className: "text-left p-3" }, "物料名称"),
+                                    React.createElement('th', { key: 'th2', className: "text-left p-3" }, "规格型号"),
+                                    React.createElement('th', { key: 'th3', className: "text-center p-3" }, "数量"),
+                                    React.createElement('th', { key: 'th4', className: "text-center p-3" }, "单位"),
+                                    React.createElement('th', { key: 'th5', className: "text-left p-3" }, "用途说明")
+                                ])
+                            ]),
+                            React.createElement('tbody', { key: 'table-body' }, 
+                                stages[currentStage].materials.map((material, index) =>
+                                    React.createElement('tr', {
+                                        key: `material-row-${index}`,
+                                        className: "border-b hover:bg-gray-50"
+                                    }, [
+                                        React.createElement('td', { key: 'name', className: "p-3 font-medium" }, material.name),
+                                        React.createElement('td', { key: 'spec', className: "p-3 text-gray-600" }, material.spec),
+                                        React.createElement('td', { key: 'quantity', className: "p-3 text-center font-bold text-blue-600" }, material.quantity),
+                                        React.createElement('td', { key: 'unit', className: "p-3 text-center" }, material.unit),
+                                        React.createElement('td', { key: 'purpose', className: "p-3 text-gray-600" }, material.purpose)
+                                    ])
+                                )
+                            )
+                        ])
+                    ])
+                ]),
+
+                // 生产统计
+                React.createElement('div', {
+                    key: 'production-stats',
+                    className: "mt-8 bg-white p-6 rounded-lg shadow-lg"
+                }, [
+                    React.createElement('h3', {
+                        key: 'prod-stats-title',
+                        className: "text-lg font-semibold text-gray-800 mb-4"
+                    }, "7班组生产统计总览"),
+                    React.createElement('div', {
+                        key: 'stats-grid',
+                        className: "grid grid-cols-2 md:grid-cols-4 gap-4"
+                    }, [
+                        React.createElement('div', {
+                            key: 'stat1',
+                            className: "text-center p-4 bg-blue-50 rounded-lg"
+                        }, [
+                            React.createElement('div', { key: 'value', className: "text-2xl font-bold text-blue-600" }, "7"),
+                            React.createElement('div', { key: 'label', className: "text-sm text-gray-600" }, "生产班组")
+                        ]),
+                        React.createElement('div', {
+                            key: 'stat2',
+                            className: "text-center p-4 bg-green-50 rounded-lg"
+                        }, [
+                            React.createElement('div', { key: 'value', className: "text-2xl font-bold text-green-600" }, 
+                                stages.reduce((sum, stage) => sum + stage.materials.length, 0)
+                            ),
+                            React.createElement('div', { key: 'label', className: "text-sm text-gray-600" }, "物料种类")
+                        ]),
+                        React.createElement('div', {
+                            key: 'stat3',
+                            className: "text-center p-4 bg-yellow-50 rounded-lg"
+                        }, [
+                            React.createElement('div', { key: 'value', className: "text-2xl font-bold text-yellow-600" }, 
+                                stages.filter(stage => completionProgress >= stage.completion).length
+                            ),
+                            React.createElement('div', { key: 'label', className: "text-sm text-gray-600" }, "已完成班组")
+                        ]),
+                        React.createElement('div', {
+                            key: 'stat4',
+                            className: "text-center p-4 bg-red-50 rounded-lg"
+                        }, [
+                            React.createElement('div', { key: 'value', className: "text-2xl font-bold text-red-600" }, 
+                                stages.filter(stage => completionProgress < stage.completion).length
+                            ),
+                            React.createElement('div', { key: 'label', className: "text-sm text-gray-600" }, "待完成班组")
+                        ])
+                    ])
+                ])
+            ]);
+        };
+
+        // 渲染应用
+        ReactDOM.render(React.createElement(TruckManufacturingProcess), document.getElementById('root'));
+    </script>
+</body>
+</html>
+>>>>>>> f95845c5ac0dc29019759e7caac5cdb76616aa85
