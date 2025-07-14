@@ -470,9 +470,6 @@
                                             style: { 
                                                 width: completionProgress >= stage.completion 
                                                     ? '100%' 
-<<<<<<< HEAD
-                                                    
-=======
                                                     : currentProgressStage === index 
                                                     ? `${((completionProgress - (stages[index-1]?.completion || 0)) / (stage.completion - (stages[index-1]?.completion || 0)) * 100).toFixed(0)}%`
                                                     : '0%'
@@ -751,4 +748,3 @@
     </script>
 </body>
 </html>
->>>>>>> f95845c5ac0dc29019759e7caac5cdb76616aa85
