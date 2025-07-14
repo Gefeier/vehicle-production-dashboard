@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仓栏式车厢7班组流水线生产管理系统</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 自定义样式 */
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+        
+        /* 移动端优化 */
+        @media (max-width: 768px) {
+            .overflow-x-auto table {
+                font-size: 0.875rem;
+            }
+            .min-w-56 {
+                min-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        // Lucide图标组件
+        const ChevronRight = () => (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9,18 15,12 9,6"></polyline>
+            </svg>
+        );
+        
+        const Package = () => (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
+                <path d="m21 16-4 2-5-3 4-2Z"></path>
+                <path d="m21 16-4.5-2.25L21 8"></path>
+                <path d="m3 6 4.5-2.25L12 8l-5 3Z"></path>
+                <line x1="7.5" y1="19.79" x2="16.5" y2="14.6"></line>
+            </svg>
+        );
+        
+        const Users = () => (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="m22 21-2-2"></path>
+                <path d="m22 21-2-2"></path>
+                <circle cx="16" cy="8" r="3"></circle>
+            </svg>
+        );
+        
+        const CheckCircle = () => (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22,4 12,14.01 9,11.01"></polyline>
+            </svg>
+        );
+        
+        const AlertCircle = () => (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+        );
+        
+        const Clock = () => (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12,6 12,12 16,14"></polyline>
+            </svg>
+        );
+        
+        const Wrench = () => (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+            </svg>
+        );
+
+        const TruckManufacturingProcess = () => {
+            const [currentStage, setCurrentStage] = useState(0);
+            const [completionProgress, setCompletionProgress] = useState(0);
+
+            // 根据流程图重新定义7个班组的制造阶段
+            const stages = [
+                {
+                    id: 1,
+                    name: "主梁工序加工",
+                    teamName: "1班 主梁工序班组",
+                    completion: 14,
+                    workTasks: [
+                        "主梁型材下料切割",
+                        "主梁冲孔加工",
+                        "主梁焊接成型",
+                        "主梁质量检验"
+                    ],
+                    materials: [
+                        { name: "直梁型材", spec: "10#直梁2540/2560/2590*2.5冲孔", quantity: 199.4, unit: "千克", purpose: "主梁主体结构" },
+                        { name: "边梁", spec: "140G型2.5*140*13000", quantity: 26.83, unit: "千克", purpose: "主梁侧边加强" },
+                        { name: "边梁", spec: "防水2.5*140*13300（140型材）", quantity: 156.6, unit: "千克", purpose: "防水边梁" },
+                        { name: "高强带钢", spec: "13000/13030*140*10", quantity: 286.09, unit: "千克", purpose: "主梁加强带" },
+                        { name: "高强带钢", spec: "13030*140*8", quantity: 227.19, unit: "千克", purpose: "主梁辅助加强" }
+                    ]
+                },
+                {
+                    id: 2,
+                    name: "横梁加工及副梁",
+                    teamName: "2班 横梁加工班组",
+                    completion: 28,
+                    workTasks: [
+                        "横梁型材切割下料",
+                        "横梁焊接组装",
+                        "副梁制作安装",
+                        "横梁与主梁连接"
+                    ],
+                    materials: [
+                        { name: "底槽型材", spec: "30*40*15*2.0*6450", quantity: 243.52, unit: "千克", purpose: "底部横梁槽钢" },
+                        { name: "方管", spec: "30*50*1.5*6000", quantity: 283.49, unit: "千克", purpose: "横梁主体结构" },
+                        { name: "方管", spec: "40*60*1.5*6000", quantity: 4.45, unit: "千克", purpose: "横梁辅助支撑" },
+                        { name: "方管", spec: "50*100*3.0*6000", quantity: 3.53, unit: "千克", purpose: "加强横梁" },
+                        { name: "方管", spec: "50*50*1.5*6000", quantity: 102.12, unit: "千克", purpose: "副梁结构" },
+                        { name: "方管", spec: "50*50*3.0*6000", quantity: 17.5, unit: "千克", purpose: "重点部位加强" }
+                    ]
+                },
+                {
+                    id: 3,
+                    name: "纵梁制作安装",
+                    teamName: "3班 纵梁制作班组",
+                    completion: 42,
+                    workTasks: [
+                        "纵梁型材准备",
+                        "纵梁焊接制作",
+                        "纵梁安装定位",
+                        "纵梁与框架连接"
+                    ],
+                    materials: [
+                        { name: "中立柱型材", spec: "2.5*180*55*55*21*21*7250", quantity: 175.92, unit: "千克", purpose: "中间立柱支撑" },
+                        { name: "型材", spec: "后尾5.8米长*14宽*2.0厚*55 材质610或700", quantity: 11.7, unit: "千克", purpose: "后尾纵梁" },
+                        { name: "型材高强", spec: "6#（6000*6#*2.5）", quantity: 28.44, unit: "千克", purpose: "高强度纵梁" },
+                        { name: "槽钢", spec: "100*6000 25KG/根", quantity: 1.67, unit: "千克", purpose: "纵梁连接件" },
+                        { name: "方钢", spec: "15*15*6000", quantity: 4.86, unit: "千克", purpose: "纵梁加强件" },
+                        { name: "角铁", spec: "30*30 7KG/根", quantity: 7.28, unit: "千克", purpose: "角部连接" },
+                        { name: "角铁", spec: "40*40*6000 12.21KG/根", quantity: 15.78, unit: "千克", purpose: "重要连接部位" }
+                    ]
+                },
+                {
+                    id: 4,
+                    name: "车架钢材工序加工组合",
+                    teamName: "4班 车架钢材班组",
+                    completion: 56,
+                    workTasks: [
+                        "车架板材切割成型",
+                        "车架钢材焊接组合",
+                        "车架整体装配",
+                        "车架强度检验"
+                    ],
+                    materials: [
+                        { name: "开平板", spec: "2.0*1250*6000", quantity: 12.82, unit: "千克", purpose: "车架底板" },
+                        { name: "开平板", spec: "2.0*1500*6000", quantity: 96.63, unit: "千克", purpose: "车架侧板" },
+                        { name: "开平板高强", spec: "2.0*1500*2445/2620", quantity: 520.46, unit: "千克", purpose: "高强度车架板" },
+                        { name: "开平板高强", spec: "3.0*1500*6000", quantity: 196.26, unit: "千克", purpose: "车架加强板" },
+                        { name: "开平板高强", spec: "5.0*1510*10000", quantity: 113.94, unit: "千克", purpose: "车架重点部位" },
+                        { name: "冷板", spec: "1.1*1250*2000", quantity: 31.69, unit: "千克", purpose: "车架冷轧板" },
+                        { name: "冷板", spec: "1.1*1500*3000", quantity: 167.86, unit: "千克", purpose: "车架大面积冷板" }
+                    ]
+                },
+                {
+                    id: 5,
+                    name: "车架钢材合件框架组合",
+                    teamName: "5班 框架组合班组",
+                    completion: 70,
+                    workTasks: [
+                        "框架合件装配",
+                        "牵引系统安装",
+                        "悬架系统安装",
+                        "框架整体调试"
+                    ],
+                    materials: [
+                        { name: "牵引销", spec: "90#焊接式  -8", quantity: 1.0, unit: "个", purpose: "主要牵引连接" },
+                        { name: "栓板", spec: "6# (5个厚高强）", quantity: 4.0, unit: "个", purpose: "牵引销固定板" },
+                        { name: "悬架", spec: "60*（190/180/170/160）*90*6", quantity: 1.0, unit: "套", purpose: "悬架系统" },
+                        { name: "平垫", spec: "M8厚", quantity: 16.0, unit: "个", purpose: "连接垫片" },
+                        { name: "镀锌螺丝", spec: "12*30", quantity: 6.0, unit: "个", purpose: "框架固定螺丝" },
+                        { name: "镀锌螺丝", spec: "14*120  无帽", quantity: 8.0, unit: "个", purpose: "重要连接螺丝" },
+                        { name: "镀锌螺帽", spec: "M12", quantity: 12.0, unit: "个", purpose: "框架固定螺帽" },
+                        { name: "铜焊钉", spec: "M8-40 铁镀", quantity: 25.0, unit: "个", purpose: "焊接连接钉" }
+                    ]
+                },
+                {
+                    id: 6,
+                    name: "装备机械设备控制器",
+                    teamName: "6班 机械设备班组",
+                    completion: 84,
+                    workTasks: [
+                        "机械设备安装",
+                        "控制系统安装",
+                        "设备调试测试",
+                        "系统集成验证"
+                    ],
+                    materials: [
+                        { name: "备胎架", spec: "升降器+链+摇杆（新款）", quantity: 1.0, unit: "套", purpose: "备胎升降装置" },
+                        { name: "气路-铝合金储气筒", spec: "38L  吊装式", quantity: 2.0, unit: "个", purpose: "气压存储" },
+                        { name: "气路-分泵弯头", spec: "16平*18内弯头带帽", quantity: 2.0, unit: "个", purpose: "气路连接" },
+                        { name: "气路-分泵直接", spec: "18*3/8", quantity: 7.0, unit: "个", purpose: "气路直接头" },
+                        { name: "气路-铆头三件套", spec: "12#（铆头，铜芯，帽）", quantity: 4.0, unit: "个", purpose: "气路连接件" },
+                        { name: "电路-电插座", spec: "七孔", quantity: 1.0, unit: "个", purpose: "电气连接" },
+                        { name: "铝门", spec: "1500*500*1.5", quantity: 1.0, unit: "个", purpose: "设备门" },
+                        { name: "铝门锁扣", spec: "铆钉式", quantity: 2.0, unit: "个", purpose: "门锁装置" }
+                    ]
+                },
+                {
+                    id: 7,
+                    name: "整理机械管材配管设备",
+                    teamName: "7班 配管设备班组",
+                    completion: 100,
+                    workTasks: [
+                        "管路系统安装",
+                        "线束整理配置",
+                        "设备最终调试",
+                        "整车系统测试"
+                    ],
+                    materials: [
+                        { name: "气路-尼龙管", spec: "PA12   1.5", quantity: 1.0, unit: "根", purpose: "气路管道" },
+                        { name: "气路-尼龙管", spec: "PA12   1.9", quantity: 1.0, unit: "根", purpose: "气路管道" },
+                        { name: "气路-红管", spec: "12*1.5PA12", quantity: 0.2, unit: "卷", purpose: "红色标识管" },
+                        { name: "气路-黄管", spec: "12*1.5PA12", quantity: 0.2, unit: "卷", purpose: "黄色标识管" },
+                        { name: "水路-七芯线", spec: "200米/卷", quantity: 0.1, unit: "卷", purpose: "水路控制线" },
+                        { name: "水路-淋水管", spec: "10# 100米/卷", quantity: 0.4, unit: "卷", purpose: "淋水系统" },
+                        { name: "灯路-边灯", spec: "153", quantity: 8.0, unit: "个", purpose: "侧边照明" },
+                        { name: "灯路-牌照灯", spec: "圆", quantity: 2.0, unit: "个", purpose: "牌照照明" },
+                        { name: "标识-反光贴", spec: "3C-通明T1200半切 50M/卷", quantity: 0.7, unit: "卷", purpose: "反光标识" },
+                        { name: "标识-导向标", spec: "保险杠 25米/卷", quantity: 0.1, unit: "卷", purpose: "导向标识" },
+                        { name: "底漆", spec: "7035  浅灰醇酸防锈漆", quantity: 10.0, unit: "千克", purpose: "防锈底漆" },
+                        { name: "稀释剂", spec: "150KG/桶 醇酸 满", quantity: 20.0, unit: "千克", purpose: "涂料稀释" }
+                    ]
+                }
+            ];
+
+            const truckVisualization = (completion) => {
+                const parts = [
+                    { name: "主梁", x: 50, y: 120, width: 300, height: 20, threshold: 14, color: "#3b82f6" },
+                    { name: "横梁", x: 80, y: 100, width: 240, height: 20, threshold: 28, color: "#8b5cf6" },
+                    { name: "纵梁", x: 90, y: 80, width: 220, height: 20, threshold: 42, color: "#10b981" },
+                    { name: "车架钢材", x: 70, y: 60, width: 260, height: 40, threshold: 56, color: "#f59e0b" },
+                    { name: "框架组合", x: 60, y: 100, width: 280, height: 60, threshold: 70, color: "#ef4444", opacity: 0.5 },
+                    { name: "机械设备", x: 100, y: 140, width: 200, height: 15, threshold: 84, color: "#84cc16" },
+                    { name: "配管设备", x: 90, y: 90, width: 220, height: 10, threshold: 100, color: "#06b6d4" }
+                ];
+
+                return React.createElement('svg', {
+                    width: 400,
+                    height: 200,
+                    className: "border border-gray-300 bg-gray-50"
+                }, [
+                    ...parts.map((part, index) => 
+                        React.createElement('rect', {
+                            key: index,
+                            x: part.x,
+                            y: part.y,
+                            width: part.width,
+                            height: part.height,
+                            fill: completion >= part.threshold ? part.color : "#e5e7eb",
+                            stroke: "#374151",
+                            strokeWidth: "2",
+                            opacity: part.opacity || (completion >= part.threshold ? 0.8 : 0.3)
+                        })
+                    ),
+                    React.createElement('text', {
+                        key: 'label',
+                        x: 200,
+                        y: 180,
+                        textAnchor: "middle",
+                        className: "text-sm font-medium"
+                    }, `仓栏式车厢 - 完成度: ${completion.toFixed(1)}%`)
+                ]);
+            };
+
+            useEffect(() => {
+                const timer = setInterval(() => {
+                    setCompletionProgress((prev) => {
+                        if (prev >= 100) return 0;
+                        return prev + 0.3;
+                    });
+                }, 200);
+
+                return () => clearInterval(timer);
+            }, []);
+
+            const getCurrentStageByProgress = (progress) => {
+                return stages.findIndex(stage => progress < stage.completion);
+            };
+
+            const currentProgressStage = getCurrentStageByProgress(completionProgress);
+
+            return React.createElement('div', {
+                className: "max-w-7xl mx-auto p-6 bg-gray-50"
+            }, [
+                // 标题
+                React.createElement('div', {
+                    key: 'header',
+                    className: "mb-8"
+                }, [
+                    React.createElement('h1', {
+                        key: 'title',
+                        className: "text-3xl font-bold text-gray-800 mb-2"
+                    }, "仓栏式车厢7班组流水线生产管理系统"),
+                    React.createElement('p', {
+                        key: 'subtitle',
+                        className: "text-gray-600"
+                    }, "基于标准7班组流水线工艺，实时显示每个班组的工作进度和物料需求")
+                ]),
+
+                // 进度条
+                React.createElement('div', {
+                    key: 'progress',
+                    className: "mb-8 bg-white p-6 rounded-lg shadow-lg"
+                }, [
+                    React.createElement('div', {
+                        key: 'progress-header',
+                        className: "flex justify-between items-center mb-4"
+                    }, [
+                        React.createElement('h2', {
+                            key: 'progress-title',
+                            className: "text-xl font-semibold text-gray-800"
+                        }, "生产线整体进度"),
+                        React.createElement('div', {
+                            key: 'progress-info',
+                            className: "flex items-center space-x-4"
+                        }, [
+                            React.createElement('span', {
+                                key: 'percentage',
+                                className: "text-2xl font-bold text-blue-600"
+                            }, `${completionProgress.toFixed(1)}%`),
+                            React.createElement('div', {
+                                key: 'current-team',
+                                className: "text-sm text-gray-600"
+                            }, `当前班组: ${currentProgressStage >= 0 && currentProgressStage < stages.length ? stages[currentProgressStage].teamName : "生产完成"}`)
+                        ])
+                    ]),
+                    React.createElement('div', {
+                        key: 'progress-bar-container',
+                        className: "w-full bg-gray-200 rounded-full h-6"
+                    }, [
+                        React.createElement('div', {
+                            key: 'progress-bar',
+                            className: "bg-gradient-to-r from-blue-500 via-purple-500 to-green-500 h-6 rounded-full transition-all duration-500 relative",
+                            style: { width: `${completionProgress}%` }
+                        }, [
+                            React.createElement('div', {
+                                key: 'progress-indicator',
+                                className: "absolute right-0 top-0 h-full w-2 bg-white rounded-full animate-pulse"
+                            })
+                        ])
+                    ])
+                ]),
+
+                // 车辆可视化
+                React.createElement('div', {
+                    key: 'visualization',
+                    className: "mb-8 flex justify-center"
+                }, [
+                    React.createElement('div', {
+                        key: 'viz-container',
+                        className: "bg-white p-6 rounded-lg shadow-lg"
+                    }, [
+                        React.createElement('h3', {
+                            key: 'viz-title',
+                            className: "text-lg font-semibold text-center mb-4"
+                        }, "车辆装配进度可视化"),
+                        truckVisualization(completionProgress)
+                    ])
+                ]),
+
+                // 7班组流水线流程
+                React.createElement('div', {
+                    key: 'workflow',
+                    className: "mb-8"
+                }, [
+                    React.createElement('h2', {
+                        key: 'workflow-title',
+                        className: "text-xl font-semibold text-gray-800 mb-4"
+                    }, "7班组流水线流程"),
+                    React.createElement('div', {
+                        key: 'workflow-container',
+                        className: "bg-white p-6 rounded-lg shadow-lg overflow-x-auto"
+                    }, [
+                        React.createElement('div', {
+                            key: 'workflow-stages',
+                            className: "flex items-center space-x-4 min-w-max"
+                        }, stages.flatMap((stage, index) => [
+                            React.createElement('div', {
+                                key: `stage-${stage.id}`,
+                                className: `relative p-4 rounded-lg border-2 min-w-56 cursor-pointer transition-all duration-300 ${
+                                    completionProgress >= stage.completion 
+                                        ? 'border-green-500 bg-green-50' 
+                                        : currentProgressStage === index
+                                        ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200 animate-pulse'
+                                        : 'border-gray-300 bg-white'
+                                }`,
+                                onClick: () => setCurrentStage(index)
+                            }, [
+                                // 班组编号
+                                React.createElement('div', {
+                                    key: 'stage-number',
+                                    className: "absolute -top-3 -left-3 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold border-2 border-white"
+                                }, `${stage.id}班`),
+                                
+                                // 状态图标
+                                React.createElement('div', {
+                                    key: 'stage-status',
+                                    className: "flex justify-end mb-2"
+                                }, [
+                                    completionProgress >= stage.completion ? 
+                                        React.createElement(CheckCircle, { key: 'check', className: "h-6 w-6 text-green-500" }) :
+                                        currentProgressStage === index ?
+                                        React.createElement(AlertCircle, { key: 'alert', className: "h-6 w-6 text-blue-500" }) :
+                                        React.createElement(Clock, { key: 'clock', className: "h-6 w-6 text-gray-400" })
+                                ]),
+                                
+                                // 班组信息
+                                React.createElement('div', {
+                                    key: 'stage-info',
+                                    className: "text-center"
+                                }, [
+                                    React.createElement('h4', {
+                                        key: 'stage-name',
+                                        className: "font-bold text-sm mb-1"
+                                    }, stage.name),
+                                    React.createElement('p', {
+                                        key: 'team-name',
+                                        className: "text-xs text-gray-600 mb-2"
+                                    }, stage.teamName),
+                                    React.createElement('div', {
+                                        key: 'material-count',
+                                        className: "text-xs bg-gray-100 px-2 py-1 rounded mb-2"
+                                    }, `${stage.materials.length}种物料`),
+                                    React.createElement('div', {
+                                        key: 'completion-rate',
+                                        className: "text-xs text-gray-500"
+                                    }, `完成度: ${stage.completion}%`)
+                                ]),
+                                
+                                // 进度条
+                                React.createElement('div', {
+                                    key: 'stage-progress',
+                                    className: "mt-3"
+                                }, [
+                                    React.createElement('div', {
+                                        key: 'progress-bg',
+                                        className: "w-full bg-gray-200 rounded-full h-2"
+                                    }, [
+                                        React.createElement('div', {
+                                            key: 'progress-fill',
+                                            className: `h-2 rounded-full transition-all duration-500 ${
+                                                completionProgress >= stage.completion ? 'bg-green-500' : 'bg-blue-500'
+                                            }`,
+                                            style: { 
+                                                width: completionProgress >= stage.completion 
+                                                    ? '100%' 
+                                                    
